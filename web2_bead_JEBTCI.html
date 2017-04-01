@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="canvas" width="425" height="425" style="border:1px"></canvas>
+    <script>
+        window.oncontextmenu = function (e) { return false; };
+        var canvas = document.getElementById("canvas");
+        const canvasSize = canvas.width;
+        const LEZER = 1;
+        const CEL = 2;
+        const TUKOR = 3;
+        const FELIG = 4;
+        const DUPLA = 5;
+        const ELLENORZO = 6;
+        const BLOKKOLO = 7;
+
+        var ctx = canvas.getContext("2d");
+        var mtx = createArray(5, 5);
+        var items = createArray(5);
+        var selectedItem = undefined;
+
+        const rectSize = 85;
+        const fps = 60;
+        function createArray(length) {
+            var arr = new Array(length || 0),
+                i = length;
+
+            if (arguments.length > 1) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                while (i--) arr[length - 1 - i] = createArray.apply(this, args);
+            }
+
+            return arr;
+        }
+        function init() {
+            for (let i = 0; i < mtx.length; i++) {
+                for (let j = 0; j < mtx[i].length; j++) {
+                    mtx[i][j] = { image: undefined, value: 0, dir: 1 };
+                }
+            }
+            canvas.addEventListener("mousedown", function (e) {
+                var column = Math.floor(e.y / rectSize % 5);
+                var row = Math.floor(e.x / rectSize % 5)
+                if (e.which == 3) {
+                    mtx[row][column].dir = (mtx[row][column].dir + 1) % 4;
+                } else if (e.which == 1) {
+                    if (selectedItem) {
+                        putSelectedItemToTable(row, column);
+                    } else {
+                        takeItemFromTable(row, column);
+                    }
+                }
+            });
+            chooseDifficulty();
+        }
+        function putSelectedItemToTable(row, column) {
+            if (mtx[row][column].value == 0) {
+                mtx[row][column] = selectedItem;
+                selectedItem = undefined;
+            }
+        }
+        function takeItemFromTable(row, column) {
+            if (!mtx[row][column].locked) {
+                selectedItem = mtx[row][column];
+                mtx[row][column] = { image: undefined, value: 0, dir: 1 };
+            }
+        }
+        function chooseDifficulty() {
+            var btn = document.createElement("BUTTON");
+            var btn2 = document.createElement("BUTTON");
+            var btn3 = document.createElement("BUTTON");
+            btn.id = "egyszeruB";
+            btn2.id = "kozepesB";
+            btn3.id = "nehezB";
+            btn.appendChild(document.createTextNode("Egyszerű"));
+            btn2.appendChild(document.createTextNode("Közepes"));
+            btn3.appendChild(document.createTextNode("Nehéz"));
+            document.body.appendChild(btn);
+            document.body.appendChild(btn2);
+            document.body.appendChild(btn3);
+            document.getElementById("canvas").style.display = "none";
+
+            document.getElementById("egyszeruB").addEventListener("click", function () {
+                mtx[1][1] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 1 };
+                mtx[3][3] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
+
+                items[0] = DUPLA;
+                start();
+            });
+            document.getElementById("kozepesB").addEventListener("click", function () {
+                mtx[0][0] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 2 };
+                mtx[4][0] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
+                mtx[3][1] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
+
+                items[0] = CEL;
+                items[1] = FELIG;
+                start();
+            });
+            document.getElementById("nehezB").addEventListener("click", function () {
+                mtx[2][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 4 };
+                mtx[4][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 4 };
+                mtx[1][2] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 4 };
+                mtx[3][2] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 1 };
+                mtx[4][3] = { locked: false, image: drawImage(ELLENORZO), value: ELLENORZO, dir: 2 };
+                mtx[0][4] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
+
+                items[0] = TUKOR;
+                items[1] = TUKOR;
+                items[2] = FELIG;
+                start();
+            });
+        }
+        function start() {
+            document.getElementById("canvas").style.display = "flex";
+
+            var a = document.getElementById("egyszeruB");
+            var b = document.getElementById("kozepesB");
+            var c = document.getElementById("nehezB");
+
+            a.parentNode.removeChild(a);
+            b.parentNode.removeChild(b);
+            c.parentNode.removeChild(c);
+
+            szamgraftaughtmesomething();
+        }
+        function rotateAndPaintImage(context, image, angleInRad, positionX, positionY, axisX, axisY) {
+            if (image) {
+                ctx.save();
+                ctx.translate(axisX, axisY);
+                ctx.rotate(angleInRad);
+                ctx.translate(-axisX, -axisY);
+                ctx.drawImage(image, positionX, positionY);
+                ctx.restore();
+            }
+        }
+        function drawImage(pictureId, direction, ctx, posX, posY) {
+            var image = new Image();
+            switch (pictureId) {
+                case 1:
+                    image.src = 'img/lezer.png';
+                    break;
+                case 2:
+                    image.src = 'img/cel.png';
+                    break;
+                case 3:
+                    image.src = 'img/tukor.png';
+                    break;
+                case 4:
+                    image.src = 'img/felig.png';
+                    break;
+                case 5:
+                    image.src = 'img/dupla.png';
+                    break;
+                case 6:
+                    image.src = 'img/ellenorzo.png';
+                    break;
+                case 7:
+                    image.src = 'img/blokkolo.png';
+                    break;
+            }
+            return image;
+
+        }
+        function drawTable() {
+            ctx.clearRect(0, 0, 425, 425);
+            for (let i = 0; i < mtx.length; i++) {
+                for (let j = 0; j < mtx[i].length; j++) {
+                    ctx.rect(i * rectSize, j * rectSize, rectSize, rectSize);
+                    ctx.stroke();
+                    rotateAndPaintImage(ctx, mtx[i][j].image, (mtx[i][j].dir * 90) * (Math.PI / 180), i * rectSize, j * rectSize, i * rectSize + rectSize / 2, j * rectSize + rectSize / 2);
+                }
+            }
+
+        }
+        function szamgraftaughtmesomething() {
+            setTimeout(function () {
+                anim = requestAnimationFrame(szamgraftaughtmesomething);
+                drawTable();
+            }, 1000 / fps)
+        }
+        init();
+    </script>
+</body>
+
+</html>
