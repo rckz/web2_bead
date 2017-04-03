@@ -12,6 +12,7 @@
     <canvas id="canvas" width="425" height="425" style="border:1px"></canvas>
     <script>
         window.oncontextmenu = function (e) { return false; };
+        var laserCoords = undefined;
         var canvas = document.getElementById("canvas");
         const canvasSize = canvas.width;
         const LEZER = 1;
@@ -21,6 +22,8 @@
         const DUPLA = 5;
         const ELLENORZO = 6;
         const BLOKKOLO = 7;
+        const RED = 1;
+        const WHITE = 2;
 
         var ctx = canvas.getContext("2d");
         var mtx = createArray(5, 5);
@@ -51,6 +54,10 @@
                 var row = Math.floor(e.x / rectSize % 5)
                 if (e.which == 3) {
                     mtx[row][column].dir = (mtx[row][column].dir + 1) % 4;
+                    if (mtx[row][column].value == LEZER) {
+                        laserCoords = { x: row, y: column, dir: mtx[row][column].dir };
+                        console.log(laserCoords);
+                    }
                 } else if (e.which == 1) {
                     if (selectedItem) {
                         putSelectedItemToTable(row, column);
@@ -60,6 +67,50 @@
                 }
             });
             chooseDifficulty();
+        }
+        function cleanUpRed() {
+            setTimeout(function () {
+                for (let i = 0; i < mtx.length; i++) {
+                    for (let j = 0; j < mtx[i].length; j++) {
+                        if(mtx[i][j].backgroundColor){
+                            mtx[i][j].backgroundColor = WHITE;
+                        }                         
+                    }
+                }
+            }, 3000);
+        }
+        function check() {
+            var s = [];
+            s.push(laserCoords);
+            while (!s.length == 0) {
+                var tmp = s.shift();
+                tmp = stepInDirection(tmp);
+                if (tmp) {
+                    s.push(tmp);
+                    if (mtx[tmp.x][tmp.y].backgroundColor) {
+                        mtx[tmp.x][tmp.y].backgroundColor = RED;
+                    } else {
+                        mtx[tmp.x][tmp.y] = { locked: mtx[tmp.x][tmp.y].locked, image: mtx[tmp.x][tmp.y].image, value: mtx[tmp.x][tmp.y].value, dir: mtx[tmp.x][tmp.y].dir, backgroundColor: RED };
+                    }
+                }
+            }
+            cleanUpRed();
+
+        }
+        function stepInDirection(coords) {
+            if (coords.dir == 0) {
+                coords.x++;
+            } else if (coords.dir == 1) {
+                coords.y++;
+            } else if (coords.dir == 2) {
+                coords.x--;
+            } else if (coords.dir == 3) {
+                coords.y--;
+            }
+            if (coords.x < 0 || coords.x > 4 || coords.y < 0 || coords.y > 4) {
+                return undefined;
+            }
+            return coords;
         }
         function putSelectedItemToTable(row, column) {
             if (mtx[row][column].value == 0) {
@@ -77,22 +128,29 @@
             var btn = document.createElement("BUTTON");
             var btn2 = document.createElement("BUTTON");
             var btn3 = document.createElement("BUTTON");
+            var checkB = document.createElement("BUTTON");
             btn.id = "egyszeruB";
             btn2.id = "kozepesB";
             btn3.id = "nehezB";
+            checkB.id = "checkB";
             btn.appendChild(document.createTextNode("Egyszerű"));
             btn2.appendChild(document.createTextNode("Közepes"));
             btn3.appendChild(document.createTextNode("Nehéz"));
+            checkB.appendChild(document.createTextNode("Ellenőrzés"));
             document.body.appendChild(btn);
             document.body.appendChild(btn2);
             document.body.appendChild(btn3);
+            document.body.appendChild(checkB);
             document.getElementById("canvas").style.display = "none";
+            document.getElementById("checkB").style.display = "none";
 
             document.getElementById("egyszeruB").addEventListener("click", function () {
                 mtx[1][1] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 1 };
                 mtx[3][3] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
 
                 items[0] = DUPLA;
+
+                laserCoords = { x: 1, y: 1, dir: 1 };
                 start();
             });
             document.getElementById("kozepesB").addEventListener("click", function () {
@@ -102,6 +160,7 @@
 
                 items[0] = CEL;
                 items[1] = FELIG;
+                laserCoords = { x: 0, y: 0, dir: 2 };
                 start();
             });
             document.getElementById("nehezB").addEventListener("click", function () {
@@ -115,6 +174,7 @@
                 items[0] = TUKOR;
                 items[1] = TUKOR;
                 items[2] = FELIG;
+                laserCoords = { x: 1, y: 2, dir: 4 };
                 start();
             });
         }
@@ -124,6 +184,11 @@
             var a = document.getElementById("egyszeruB");
             var b = document.getElementById("kozepesB");
             var c = document.getElementById("nehezB");
+            var checkB = document.getElementById("checkB");
+            checkB.style.display = "flex";
+            checkB.addEventListener("click", function (e) {
+                check();
+            });
 
             a.parentNode.removeChild(a);
             b.parentNode.removeChild(b);
@@ -173,6 +238,15 @@
             ctx.clearRect(0, 0, 425, 425);
             for (let i = 0; i < mtx.length; i++) {
                 for (let j = 0; j < mtx[i].length; j++) {
+                    if (mtx[i][j].backgroundColor) {
+                        if (mtx[i][j].backgroundColor == RED) {
+                            ctx.fillStyle = "#FF0000";
+                        }
+                    } else {
+                        ctx.fillStyle = "#FFFFFF";
+                    }
+                    ctx.fillRect(i * rectSize, j * rectSize, rectSize, rectSize);
+                    ctx.strokeStyle = "black";
                     ctx.rect(i * rectSize, j * rectSize, rectSize, rectSize);
                     ctx.stroke();
                     rotateAndPaintImage(ctx, mtx[i][j].image, (mtx[i][j].dir * 90) * (Math.PI / 180), i * rectSize, j * rectSize, i * rectSize + rectSize / 2, j * rectSize + rectSize / 2);
