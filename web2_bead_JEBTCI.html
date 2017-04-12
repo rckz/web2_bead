@@ -9,7 +9,7 @@
 </head>
 
 <body>
-    <canvas id="canvas" width="425" height="425" style="border:1px"></canvas>
+    <canvas id="canvas" width="535" height="425" style="border:1px"></canvas>
     <script>
         window.oncontextmenu = function (e) { return false; };
         var laserCoords = undefined;
@@ -50,15 +50,20 @@
                 }
             }
             canvas.addEventListener("mousedown", function (e) {
-                var column = Math.floor(e.y / rectSize % 5);
-                var row = Math.floor(e.x / rectSize % 5)
+                var column = Math.floor(e.y / rectSize % 6);
+                var row = Math.floor(e.x / rectSize % 6)
+                // console.log(row == 5 ? items[column] : mtx[row][column]);
                 if (e.which == 3) {
-                    mtx[row][column].dir = (mtx[row][column].dir + 1) % 4;
-                    if (mtx[row][column].value == LEZER) {
-                        laserCoords = { x: row, y: column, dir: mtx[row][column].dir };
-                        console.log(laserCoords);
+                    if (row != 5) {
+                        mtx[row][column].dir = (mtx[row][column].dir + 1) % 4;
+                        if (mtx[row][column].value == LEZER) {
+                            laserCoords.dir = (laserCoords.dir + 1) % 4;
+                        }
                     }
                 } else if (e.which == 1) {
+                    if (row < 5) {
+                        console.log(mtx[row][column]);
+                    }
                     if (selectedItem) {
                         putSelectedItemToTable(row, column);
                     } else {
@@ -72,9 +77,9 @@
             setTimeout(function () {
                 for (let i = 0; i < mtx.length; i++) {
                     for (let j = 0; j < mtx[i].length; j++) {
-                        if(mtx[i][j].backgroundColor){
+                        if (mtx[i][j].backgroundColor) {
                             mtx[i][j].backgroundColor = WHITE;
-                        }                         
+                        }
                     }
                 }
             }, 3000);
@@ -97,7 +102,10 @@
             cleanUpRed();
 
         }
+
         function stepInDirection(coords) {
+            var inComingDir;
+            // debugger;
             if (coords.dir == 0) {
                 coords.x++;
             } else if (coords.dir == 1) {
@@ -107,21 +115,54 @@
             } else if (coords.dir == 3) {
                 coords.y--;
             }
+            if (coords.lastCoords) {
+                inComingDir = (coords.x - coords.lastCoords.x) + (coords.y - coords.lastCoords.y);
+            }
+            else {
+                var initLastCoord = { x: coords.x, y: coords.y, dir: coords.dir };
+                if (initLastCoord.dir == 0) {
+                    initLastCoord.x--;
+                } else if (initLastCoord.dir == 1) {
+                    initLastCoord.y--;
+                } else if (initLastCoord.dir == 2) {
+                    initLastCoord.x++;
+                } else if (initLastCoord.dir == 3) {
+                    initLastCoord.y++;
+                }
+                coords = { x: coords.x, y: coords.y, dir: coords.dir, lastCoords: initLastCoord };
+                inComingDir = (coords.x - coords.lastCoords.x) + (coords.y - coords.lastCoords.y);
+            }
+            if (mtx[coords.x][coords.y].value == DUPLA) {
+                if (inComingDir == 1) {
+                    debugger;
+                    coords.dir = (coords.dir - mtx[coords.x][coords.y].dir%2) % 4;
+                } else if (inComingDir == -1) {
+                    coords.dir = (coords.dir + mtx[coords.x][coords.y].dir%2) % 4;
+                }
+            }
             if (coords.x < 0 || coords.x > 4 || coords.y < 0 || coords.y > 4) {
                 return undefined;
             }
+            coords.lastCoords = { x: coords.x, y: coords.y };
             return coords;
         }
         function putSelectedItemToTable(row, column) {
-            if (mtx[row][column].value == 0) {
-                mtx[row][column] = selectedItem;
-                selectedItem = undefined;
+            if (row != 5) {
+                if (mtx[row][column].value == 0) {
+                    mtx[row][column] = selectedItem;
+                    selectedItem = undefined;
+                }
             }
         }
         function takeItemFromTable(row, column) {
-            if (!mtx[row][column].locked) {
-                selectedItem = mtx[row][column];
-                mtx[row][column] = { image: undefined, value: 0, dir: 1 };
+            if (row != 5) {
+                if (!mtx[row][column].locked) {
+                    selectedItem = mtx[row][column];
+                    mtx[row][column] = { image: undefined, value: 0, dir: 1 };
+                }
+            } else {
+                selectedItem = items[column];
+                items[column] = { image: undefined, value: 0, dir: 1 };
             }
         }
         function chooseDifficulty() {
@@ -148,7 +189,7 @@
                 mtx[1][1] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 1 };
                 mtx[3][3] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
 
-                items[0] = DUPLA;
+                items[0] = { image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
                 laserCoords = { x: 1, y: 1, dir: 1 };
                 start();
@@ -158,8 +199,8 @@
                 mtx[4][0] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
                 mtx[3][1] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
-                items[0] = CEL;
-                items[1] = FELIG;
+                items[0] = { image: drawImage(CEL), value: CEL, dir: 1 };
+                items[1] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
                 laserCoords = { x: 0, y: 0, dir: 2 };
                 start();
             });
@@ -171,9 +212,9 @@
                 mtx[4][3] = { locked: false, image: drawImage(ELLENORZO), value: ELLENORZO, dir: 2 };
                 mtx[0][4] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
-                items[0] = TUKOR;
-                items[1] = TUKOR;
-                items[2] = FELIG;
+                items[0] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
+                items[1] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
+                items[2] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
                 laserCoords = { x: 1, y: 2, dir: 4 };
                 start();
             });
@@ -235,7 +276,8 @@
 
         }
         function drawTable() {
-            ctx.clearRect(0, 0, 425, 425);
+            ctx.clearRect(0, 0, 525, 425);
+            ctx.beginPath();
             for (let i = 0; i < mtx.length; i++) {
                 for (let j = 0; j < mtx[i].length; j++) {
                     if (mtx[i][j].backgroundColor) {
@@ -252,7 +294,14 @@
                     rotateAndPaintImage(ctx, mtx[i][j].image, (mtx[i][j].dir * 90) * (Math.PI / 180), i * rectSize, j * rectSize, i * rectSize + rectSize / 2, j * rectSize + rectSize / 2);
                 }
             }
-
+            for (let i = 0; i < items.length; i++) {
+                ctx.strokeStyle = "black";
+                ctx.rect(5 * rectSize + 10, i * rectSize, rectSize, rectSize);
+                if (items[i] && items[i].image) {
+                    ctx.drawImage(items[i].image, 5 * rectSize + 10, i * rectSize);
+                }
+            }
+            console.log("shiet");
         }
         function szamgraftaughtmesomething() {
             setTimeout(function () {
