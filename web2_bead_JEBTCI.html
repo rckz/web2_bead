@@ -133,12 +133,10 @@
                 inComingDir = (coords.x - coords.lastCoords.x) + (coords.y - coords.lastCoords.y);
             }
             if (mtx[coords.x][coords.y].value == DUPLA) {
-                if (inComingDir == 1) {
-                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
-                        coords.dir = (coords.dir+1) % 4;
-                    }else{
-                        coords.dir = (coords.dir-1) % 4;
-                    }
+                if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                    coords.dir = (coords.dir + 1) % 4;
+                } else {
+                    coords.dir = (coords.dir - 1) % 4;
                 }
             }
             if (coords.x < 0 || coords.x > 4 || coords.y < 0 || coords.y > 4) {
