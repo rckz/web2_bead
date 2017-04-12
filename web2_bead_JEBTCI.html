@@ -134,10 +134,11 @@
             }
             if (mtx[coords.x][coords.y].value == DUPLA) {
                 if (inComingDir == 1) {
-                    debugger;
-                    coords.dir = (coords.dir - mtx[coords.x][coords.y].dir%2) % 4;
-                } else if (inComingDir == -1) {
-                    coords.dir = (coords.dir + mtx[coords.x][coords.y].dir%2) % 4;
+                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                        coords.dir = (coords.dir+1) % 4;
+                    }else{
+                        coords.dir = (coords.dir-1) % 4;
+                    }
                 }
             }
             if (coords.x < 0 || coords.x > 4 || coords.y < 0 || coords.y > 4) {
