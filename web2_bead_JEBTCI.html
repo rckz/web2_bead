@@ -86,6 +86,7 @@
         }
         function check() {
             var s = [];
+            var c = { x: laserCoords.x, y: laserCoords.y, dir: laserCoords.dir };
             s.push(laserCoords);
             while (!s.length == 0) {
                 // debugger;
@@ -126,24 +127,30 @@
                             } else if (inComingDirY == -1) {
                                 shiet.y--;
                             }
-                            s.push(shiet);
-                            if (mtx[shiet.x][shiet.y].backgroundColor) {
-                                mtx[tmshietp.x][shiet.y].backgroundColor = RED;
-                            } else {
-                                mtx[shiet.x][shiet.y] = { locked: mtx[shiet.x][shiet.y].locked, image: mtx[shiet.x][shiet.y].image, value: mtx[shiet.x][shiet.y].value, dir: mtx[shiet.x][shiet.y].dir, backgroundColor: RED };
+                            if (mtx[shiet.x][shiet.y]) {
+                                if (mtx[shiet.x][shiet.y].value == 0) {
+                                    s.push(shiet);
+                                } else {
+                                    s.push(stepInDirection(shiet));
+                                }
+                                if (mtx[shiet.x][shiet.y].backgroundColor) {
+                                    mtx[shiet.x][shiet.y].backgroundColor = RED;
+                                } else {
+                                    mtx[shiet.x][shiet.y] = { locked: mtx[shiet.x][shiet.y].locked, image: mtx[shiet.x][shiet.y].image, value: mtx[shiet.x][shiet.y].value, dir: mtx[shiet.x][shiet.y].dir, backgroundColor: RED };
+                                }
                             }
                         }
+                        if (mtx[tmp.x][tmp.y].backgroundColor) {
+                            mtx[tmp.x][tmp.y].backgroundColor = RED;
+                        } else {
+                            mtx[tmp.x][tmp.y] = { locked: mtx[tmp.x][tmp.y].locked, image: mtx[tmp.x][tmp.y].image, value: mtx[tmp.x][tmp.y].value, dir: mtx[tmp.x][tmp.y].dir, backgroundColor: RED };
+                        }
                     }
-                    if (mtx[tmp.x][tmp.y].backgroundColor) {
-                        mtx[tmp.x][tmp.y].backgroundColor = RED;
-                    } else {
-                        mtx[tmp.x][tmp.y] = { locked: mtx[tmp.x][tmp.y].locked, image: mtx[tmp.x][tmp.y].image, value: mtx[tmp.x][tmp.y].value, dir: mtx[tmp.x][tmp.y].dir, backgroundColor: RED };
-                    }
+
                 }
+                cleanUpRed();
 
             }
-            cleanUpRed();
-
         }
 
         function stepInDirection(coords) {
@@ -281,7 +288,7 @@
         }
         function takeItemFromTable(row, column) {
             if (row != 5) {
-                if (!mtx[row][column].locked) {
+                if (!mtx[row][column].locked && mtx[row][column].value != 0) {
                     selectedItem = mtx[row][column];
                     mtx[row][column] = { image: undefined, value: 0, dir: 1 };
                 }
