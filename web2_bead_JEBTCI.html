@@ -88,24 +88,175 @@
             var s = [];
             s.push(laserCoords);
             while (!s.length == 0) {
+                // debugger;
                 var tmp = s.shift();
+                // inComingDirX, inComingDirY;
+                if (tmp.lastCoords) {
+                    inComingDirX = (tmp.x - tmp.lastCoords.x);
+                    inComingDirY = (tmp.y - tmp.lastCoords.y);
+                }
+                else {
+                    var initLastCoord = { x: tmp.x, y: tmp.y, dir: tmp.dir };
+                    if (initLastCoord.dir == 0) {
+                        initLastCoord.x--;
+                    } else if (initLastCoord.dir == 1) {
+                        initLastCoord.y--;
+                    } else if (initLastCoord.dir == 2) {
+                        initLastCoord.x++;
+                    } else if (initLastCoord.dir == 3) {
+                        initLastCoord.y++;
+                    }
+                    tmp = { x: tmp.x, y: tmp.y, dir: tmp.dir, lastCoords: initLastCoord };
+                    inComingDirX = (tmp.x - tmp.lastCoords.x);
+                    inComingDirY = (tmp.y - tmp.lastCoords.y);
+                }
                 tmp = stepInDirection(tmp);
                 if (tmp) {
-                    s.push(tmp);
+                    s.unshift(tmp);
+                    if (tmp.lastCoords) {
+                        if (mtx[tmp.x][tmp.y].value == FELIG) {
+                            // debugger;
+                            var shiet = { x: tmp.x, y: tmp.y, dir: tmp.lastCoords.dir, lastCoords: { x: tmp.lastCoords.x, y: tmp.lastCoords.y, dir: tmp.lastCoords.dir } };
+                            if (inComingDirX == 1) {
+                                shiet.x++;
+                            } else if (inComingDirX == -1) {
+                                shiet.x--;
+                            } else if (inComingDirY == 1) {
+                                shiet.y++;
+                            } else if (inComingDirY == -1) {
+                                shiet.y--;
+                            }
+                            s.push(shiet);
+                            if (mtx[shiet.x][shiet.y].backgroundColor) {
+                                mtx[tmshietp.x][shiet.y].backgroundColor = RED;
+                            } else {
+                                mtx[shiet.x][shiet.y] = { locked: mtx[shiet.x][shiet.y].locked, image: mtx[shiet.x][shiet.y].image, value: mtx[shiet.x][shiet.y].value, dir: mtx[shiet.x][shiet.y].dir, backgroundColor: RED };
+                            }
+                        }
+                    }
                     if (mtx[tmp.x][tmp.y].backgroundColor) {
                         mtx[tmp.x][tmp.y].backgroundColor = RED;
                     } else {
                         mtx[tmp.x][tmp.y] = { locked: mtx[tmp.x][tmp.y].locked, image: mtx[tmp.x][tmp.y].image, value: mtx[tmp.x][tmp.y].value, dir: mtx[tmp.x][tmp.y].dir, backgroundColor: RED };
                     }
                 }
+
             }
             cleanUpRed();
 
         }
 
         function stepInDirection(coords) {
-            var inComingDir;
+
             // debugger;
+            if (mtx[coords.x][coords.y].value == DUPLA) {
+                if (inComingDirY != 0) {
+                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                        coords.dir = (coords.dir + 1) % 4;
+                    } else {
+                        coords.dir = (coords.dir - 1) % 4;
+                    }
+                } else if (inComingDirX != 0) {
+                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                        coords.dir -= 1;
+                        if (coords.dir == -1) {
+                            coords.dir = 3;
+                        }
+                    } else {
+                        coords.dir = (coords.dir + 1) % 4;
+                    }
+                }
+            }
+            if (mtx[coords.x][coords.y].value == FELIG) {
+                if (inComingDirY != 0) {
+                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                        coords.dir = (coords.dir + 1) % 4;
+                    } else {
+                        coords.dir = (coords.dir - 1) % 4;
+                    }
+                } else if (inComingDirX != 0) {
+                    if (mtx[coords.x][coords.y].dir % 2 == 0) {
+                        coords.dir -= 1;
+                        if (coords.dir == -1) {
+                            coords.dir = 3;
+                        }
+                    } else {
+                        coords.dir = (coords.dir + 1) % 4;
+                    }
+                }
+            }
+            if (mtx[coords.x][coords.y].value == CEL) {
+                // debugger;
+                if (inComingDirY == -1) {
+                    if (mtx[coords.x][coords.y].dir == 0) {
+                        coords.dir = 0;
+                    } else if (mtx[coords.x][coords.y].dir == 1) {
+                        coords.dir = 2;
+                    } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 3) {
+                        return undefined;
+                    }
+                } else if (inComingDirY == 1) {
+                    if (mtx[coords.x][coords.y].dir == 2) {
+                        coords.dir = 2;
+                    } else if (mtx[coords.x][coords.y].dir == 3) {
+                        coords.dir = 0;
+                    } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 1) {
+                        return undefined;
+                    }
+                } else if (inComingDirX == 1) {
+                    if (mtx[coords.x][coords.y].dir == 1) {
+                        coords.dir = 1;
+                    } else if (mtx[coords.x][coords.y].dir == 2) {
+                        coords.dir = 3;
+                    } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 3) {
+                        return undefined;
+                    }
+                } else if (inComingDirX == -1) {
+                    if (mtx[coords.x][coords.y].dir == 0) {
+                        coords.dir = 1;
+                    } else if (mtx[coords.x][coords.y].dir == 3) {
+                        coords.dir = 3;
+                    } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 1) {
+                        return undefined;
+                    }
+                }
+            }
+            if (mtx[coords.x][coords.y].value == TUKOR) {
+                if (inComingDirY == -1) {
+                    if (mtx[coords.x][coords.y].dir == 0) {
+                        coords.dir = 0;
+                    } else if (mtx[coords.x][coords.y].dir == 1) {
+                        coords.dir = 2;
+                    } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 3) {
+                        return undefined;
+                    }
+                } else if (inComingDirY == 1) {
+                    if (mtx[coords.x][coords.y].dir == 2) {
+                        coords.dir = 2;
+                    } else if (mtx[coords.x][coords.y].dir == 3) {
+                        coords.dir = 0;
+                    } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 1) {
+                        return undefined;
+                    }
+                } else if (inComingDirX == 1) {
+                    if (mtx[coords.x][coords.y].dir == 1) {
+                        coords.dir = 1;
+                    } else if (mtx[coords.x][coords.y].dir == 2) {
+                        coords.dir = 3;
+                    } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 3) {
+                        return undefined;
+                    }
+                } else if (inComingDirX == -1) {
+                    if (mtx[coords.x][coords.y].dir == 0) {
+                        coords.dir = 1;
+                    } else if (mtx[coords.x][coords.y].dir == 3) {
+                        coords.dir = 3;
+                    } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 1) {
+                        return undefined;
+                    }
+                }
+            }
+            coords.lastCoords = { x: coords.x, y: coords.y, dir: coords.dir };
             if (coords.dir == 0) {
                 coords.x++;
             } else if (coords.dir == 1) {
@@ -115,34 +266,9 @@
             } else if (coords.dir == 3) {
                 coords.y--;
             }
-            if (coords.lastCoords) {
-                inComingDir = (coords.x - coords.lastCoords.x) + (coords.y - coords.lastCoords.y);
-            }
-            else {
-                var initLastCoord = { x: coords.x, y: coords.y, dir: coords.dir };
-                if (initLastCoord.dir == 0) {
-                    initLastCoord.x--;
-                } else if (initLastCoord.dir == 1) {
-                    initLastCoord.y--;
-                } else if (initLastCoord.dir == 2) {
-                    initLastCoord.x++;
-                } else if (initLastCoord.dir == 3) {
-                    initLastCoord.y++;
-                }
-                coords = { x: coords.x, y: coords.y, dir: coords.dir, lastCoords: initLastCoord };
-                inComingDir = (coords.x - coords.lastCoords.x) + (coords.y - coords.lastCoords.y);
-            }
-            if (mtx[coords.x][coords.y].value == DUPLA) {
-                if (mtx[coords.x][coords.y].dir % 2 == 0) {
-                    coords.dir = (coords.dir + 1) % 4;
-                } else {
-                    coords.dir = (coords.dir - 1) % 4;
-                }
-            }
             if (coords.x < 0 || coords.x > 4 || coords.y < 0 || coords.y > 4) {
                 return undefined;
             }
-            coords.lastCoords = { x: coords.x, y: coords.y };
             return coords;
         }
         function putSelectedItemToTable(row, column) {
@@ -186,7 +312,7 @@
 
             document.getElementById("egyszeruB").addEventListener("click", function () {
                 mtx[1][1] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 1 };
-                mtx[3][3] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
+                mtx[3][3] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 2 };
 
                 items[0] = { image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
@@ -204,9 +330,9 @@
                 start();
             });
             document.getElementById("nehezB").addEventListener("click", function () {
-                mtx[2][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 4 };
-                mtx[4][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 4 };
-                mtx[1][2] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 4 };
+                mtx[2][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
+                mtx[4][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
+                mtx[1][2] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 0 };
                 mtx[3][2] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 mtx[4][3] = { locked: false, image: drawImage(ELLENORZO), value: ELLENORZO, dir: 2 };
                 mtx[0][4] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
@@ -214,7 +340,7 @@
                 items[0] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[1] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[2] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
-                laserCoords = { x: 1, y: 2, dir: 4 };
+                laserCoords = { x: 1, y: 2, dir: 0 };
                 start();
             });
         }
