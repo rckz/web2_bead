@@ -10,6 +10,12 @@
 
 <body>
     <canvas id="canvas" width="535" height="425" style="border:1px"></canvas>
+    <table>
+        <tr>
+            <td id="counter"></td>
+        </tr>
+    </table>
+    <div id="targetsToHit" />
     <script>
         window.oncontextmenu = function (e) { return false; };
         var laserCoords = undefined;
@@ -52,7 +58,6 @@
             canvas.addEventListener("mousedown", function (e) {
                 var column = Math.floor(e.y / rectSize % 6);
                 var row = Math.floor(e.x / rectSize % 6)
-                // console.log(row == 5 ? items[column] : mtx[row][column]);
                 if (e.which == 3) {
                     if (row != 5) {
                         mtx[row][column].dir = (mtx[row][column].dir + 1) % 4;
@@ -61,13 +66,14 @@
                         }
                     }
                 } else if (e.which == 1) {
-                    if (row < 5) {
-                        console.log(mtx[row][column]);
-                    }
                     if (selectedItem) {
                         putSelectedItemToTable(row, column);
                     } else {
                         takeItemFromTable(row, column);
+                    }
+                } else if (e.which == 2) {
+                    if (row < 5) {
+                        console.log(mtx[row][column]);
                     }
                 }
             });
@@ -88,10 +94,9 @@
             var s = [];
             var c = { x: laserCoords.x, y: laserCoords.y, dir: laserCoords.dir };
             s.push(laserCoords);
+            var targets = count();
             while (!s.length == 0) {
-                // debugger;
                 var tmp = s.shift();
-                // inComingDirX, inComingDirY;
                 if (tmp.lastCoords) {
                     inComingDirX = (tmp.x - tmp.lastCoords.x);
                     inComingDirY = (tmp.y - tmp.lastCoords.y);
@@ -111,12 +116,11 @@
                     inComingDirX = (tmp.x - tmp.lastCoords.x);
                     inComingDirY = (tmp.y - tmp.lastCoords.y);
                 }
-                tmp = stepInDirection(tmp);
+                tmp = stepInDirection(tmp, targets);
                 if (tmp) {
                     s.unshift(tmp);
                     if (tmp.lastCoords) {
                         if (mtx[tmp.x][tmp.y].value == FELIG) {
-                            // debugger;
                             var shiet = { x: tmp.x, y: tmp.y, dir: tmp.lastCoords.dir, lastCoords: { x: tmp.lastCoords.x, y: tmp.lastCoords.y, dir: tmp.lastCoords.dir } };
                             if (inComingDirX == 1) {
                                 shiet.x++;
@@ -148,14 +152,43 @@
                     }
 
                 }
+                if (targets.canCount == 0 && targets.mustCount == 0) {
+                    debugger;
+                    document.getElementById("targetsToHit").innerHTML = "nyertél.";
+                } else {
+                    document.getElementById("targetsToHit").innerHTML = "nem nyertél.";
+                }
+                setTimeout(function () {
+                    location.reload();
+                }, 3000);
                 cleanUpRed();
 
             }
         }
-
-        function stepInDirection(coords) {
-
-            // debugger;
+        function count() {
+            var canCount = 0, mustCount = 0;
+            for (let i = 0; i < mtx.length; i++) {
+                for (let j = 0; j < mtx[i].length; j++) {
+                    if (mtx[i][j].value != 0 && mtx[i][j].value != BLOKKOLO && mtx[i][j].value != LEZER) {
+                        if (mtx[i][j].value == CEL || mtx[i][j].value == ELLENORZO) { mustCount++; }
+                        else { canCount++ };
+                    }
+                }
+            }
+            for (let i = 0; i < items.length; i++) {
+                if (items[i]) {
+                    if (items[i].value != 0 && items[i].value != BLOKKOLO && items[i] != LEZER) {
+                        if (items[i].value == CEL || items[i].value == ELLENORZO) { mustCount++; }
+                        else { canCount++ };
+                    }
+                }
+            }
+            return { canCount, mustCount };
+        }
+        function stepInDirection(coords, targets) {
+            if (mtx[coords.x][coords.y].value == ELLENORZO) {
+                targets.canCount--;
+            }
             if (mtx[coords.x][coords.y].value == DUPLA) {
                 if (inComingDirY != 0) {
                     if (mtx[coords.x][coords.y].dir % 2 == 0) {
@@ -173,6 +206,7 @@
                         coords.dir = (coords.dir + 1) % 4;
                     }
                 }
+                targets.canCount--;
             }
             if (mtx[coords.x][coords.y].value == FELIG) {
                 if (inComingDirY != 0) {
@@ -191,15 +225,18 @@
                         coords.dir = (coords.dir + 1) % 4;
                     }
                 }
+                targets.canCount--;
             }
             if (mtx[coords.x][coords.y].value == CEL) {
-                // debugger;
                 if (inComingDirY == -1) {
                     if (mtx[coords.x][coords.y].dir == 0) {
                         coords.dir = 0;
                     } else if (mtx[coords.x][coords.y].dir == 1) {
                         coords.dir = 2;
                     } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 3) {
+                        if (mtx[coords.x][coords.y].dir == 3) {
+                            targets.mustCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirY == 1) {
@@ -208,6 +245,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 3) {
                         coords.dir = 0;
                     } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 1) {
+                        if (mtx[coords.x][coords.y].dir == 1) {
+                            targets.mustCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirX == 1) {
@@ -216,6 +256,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 2) {
                         coords.dir = 3;
                     } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 3) {
+                        if (mtx[coords.x][coords.y].dir == 0) {
+                            targets.mustCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirX == -1) {
@@ -224,6 +267,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 3) {
                         coords.dir = 3;
                     } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 1) {
+                        if (mtx[coords.x][coords.y].dir == 2) {
+                            targets.mustCount--;
+                        }
                         return undefined;
                     }
                 }
@@ -235,6 +281,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 1) {
                         coords.dir = 2;
                     } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 3) {
+                        if (mtx[coords.x][coords.y].dir == 3) {
+                            targets.canCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirY == 1) {
@@ -243,6 +292,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 3) {
                         coords.dir = 0;
                     } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 1) {
+                        if (mtx[coords.x][coords.y].dir == 1) {
+                            targets.canCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirX == 1) {
@@ -251,6 +303,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 2) {
                         coords.dir = 3;
                     } else if (mtx[coords.x][coords.y].dir == 0 || mtx[coords.x][coords.y].dir == 3) {
+                        if (mtx[coords.x][coords.y].dir == 0) {
+                            targets.canCount--;
+                        }
                         return undefined;
                     }
                 } else if (inComingDirX == -1) {
@@ -259,6 +314,9 @@
                     } else if (mtx[coords.x][coords.y].dir == 3) {
                         coords.dir = 3;
                     } else if (mtx[coords.x][coords.y].dir == 2 || mtx[coords.x][coords.y].dir == 1) {
+                        if (mtx[coords.x][coords.y].dir == 2) {
+                            targets.canCount--;
+                        }
                         return undefined;
                     }
                 }
@@ -323,6 +381,8 @@
 
                 items[0] = { image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
+                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 2";
+
                 laserCoords = { x: 1, y: 1, dir: 1 };
                 start();
             });
@@ -333,6 +393,8 @@
 
                 items[0] = { image: drawImage(CEL), value: CEL, dir: 1 };
                 items[1] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
+
+                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 4";
                 laserCoords = { x: 0, y: 0, dir: 2 };
                 start();
             });
@@ -347,6 +409,8 @@
                 items[0] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[1] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[2] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
+
+                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 8";
                 laserCoords = { x: 1, y: 2, dir: 0 };
                 start();
             });
@@ -433,7 +497,6 @@
                     ctx.drawImage(items[i].image, 5 * rectSize + 10, i * rectSize);
                 }
             }
-            console.log("shiet");
         }
         function szamgraftaughtmesomething() {
             setTimeout(function () {
