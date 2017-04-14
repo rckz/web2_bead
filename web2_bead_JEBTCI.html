@@ -35,6 +35,7 @@
         var mtx = createArray(5, 5);
         var items = createArray(5);
         var selectedItem = undefined;
+        var targets = undefined;
 
         const rectSize = 85;
         const fps = 60;
@@ -94,7 +95,7 @@
             var s = [];
             var c = { x: laserCoords.x, y: laserCoords.y, dir: laserCoords.dir };
             s.push(laserCoords);
-            var targets = count();
+            debugger;
             while (!s.length == 0) {
                 var tmp = s.shift();
                 if (tmp.lastCoords) {
@@ -116,7 +117,7 @@
                     inComingDirX = (tmp.x - tmp.lastCoords.x);
                     inComingDirY = (tmp.y - tmp.lastCoords.y);
                 }
-                tmp = stepInDirection(tmp, targets);
+                tmp = stepInDirection(tmp);
                 if (tmp) {
                     s.unshift(tmp);
                     if (tmp.lastCoords) {
@@ -152,8 +153,7 @@
                     }
 
                 }
-                if (targets.canCount == 0 && targets.mustCount == 0) {
-                    debugger;
+                if (targets.canCount <= 0 && targets.mustCount <= 0) {
                     document.getElementById("targetsToHit").innerHTML = "nyertél.";
                 } else {
                     document.getElementById("targetsToHit").innerHTML = "nem nyertél.";
@@ -185,7 +185,7 @@
             }
             return { canCount, mustCount };
         }
-        function stepInDirection(coords, targets) {
+        function stepInDirection(coords) {
             if (mtx[coords.x][coords.y].value == ELLENORZO) {
                 targets.canCount--;
             }
@@ -376,41 +376,44 @@
             document.getElementById("checkB").style.display = "none";
 
             document.getElementById("egyszeruB").addEventListener("click", function () {
-                mtx[1][1] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 1 };
-                mtx[3][3] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 2 };
+                mtx[1][1] = { locked: true, image: drawImage(LEZER), value: LEZER, dir: 1 };
+                mtx[3][3] = { locked: true, image: drawImage(DUPLA), value: DUPLA, dir: 2 };
 
                 items[0] = { image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
                 document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 2";
 
+                targets = { mustCount: 1, canCount: 0 };
                 laserCoords = { x: 1, y: 1, dir: 1 };
                 start();
             });
             document.getElementById("kozepesB").addEventListener("click", function () {
-                mtx[0][0] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 2 };
-                mtx[4][0] = { locked: false, image: drawImage(CEL), value: CEL, dir: 2 };
-                mtx[3][1] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
+                mtx[0][0] = { locked: true, image: drawImage(LEZER), value: LEZER, dir: 2 };
+                mtx[4][0] = { locked: true, image: drawImage(CEL), value: CEL, dir: 2 };
+                mtx[3][1] = { locked: true, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
                 items[0] = { image: drawImage(CEL), value: CEL, dir: 1 };
                 items[1] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
 
-                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 4";
+                targets = { mustCount: 2, canCount: 0 };
+                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 2";
                 laserCoords = { x: 0, y: 0, dir: 2 };
                 start();
             });
             document.getElementById("nehezB").addEventListener("click", function () {
-                mtx[2][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
-                mtx[4][0] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
-                mtx[1][2] = { locked: false, image: drawImage(LEZER), value: LEZER, dir: 0 };
-                mtx[3][2] = { locked: false, image: drawImage(TUKOR), value: TUKOR, dir: 1 };
-                mtx[4][3] = { locked: false, image: drawImage(ELLENORZO), value: ELLENORZO, dir: 2 };
-                mtx[0][4] = { locked: false, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
+                mtx[2][0] = { locked: true, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
+                mtx[4][0] = { locked: true, image: drawImage(TUKOR), value: TUKOR, dir: 0 };
+                mtx[1][2] = { locked: true, image: drawImage(LEZER), value: LEZER, dir: 0 };
+                mtx[3][2] = { locked: true, image: drawImage(TUKOR), value: TUKOR, dir: 1 };
+                mtx[4][3] = { locked: true, image: drawImage(ELLENORZO), value: ELLENORZO, dir: 2 };
+                mtx[0][4] = { locked: true, image: drawImage(DUPLA), value: DUPLA, dir: 1 };
 
                 items[0] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[1] = { image: drawImage(TUKOR), value: TUKOR, dir: 1 };
                 items[2] = { image: drawImage(FELIG), value: FELIG, dir: 1 };
 
-                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 8";
+                targets = { mustCount: 1, canCount: 1 };
+                document.getElementById("targetsToHit").innerHTML = "Ennyi célpontot kell eltalálni: 2";
                 laserCoords = { x: 1, y: 2, dir: 0 };
                 start();
             });
